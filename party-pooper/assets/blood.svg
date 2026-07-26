@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bl-base" cx="40%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#e84444"/>
+      <stop offset="30%" stop-color="#c41e1e"/>
+      <stop offset="65%" stop-color="#8b0000"/>
+      <stop offset="100%" stop-color="#5c0000"/>
+    </radialGradient>
+    <radialGradient id="bl-mid" cx="42%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#f05555"/>
+      <stop offset="40%" stop-color="#d32f2f"/>
+      <stop offset="80%" stop-color="#9a0000"/>
+      <stop offset="100%" stop-color="#6e0000"/>
+    </radialGradient>
+    <radialGradient id="bl-top" cx="40%" cy="25%" r="70%">
+      <stop offset="0%" stop-color="#ff6b6b"/>
+      <stop offset="50%" stop-color="#e03939"/>
+      <stop offset="100%" stop-color="#9a0000"/>
+    </radialGradient>
+    <radialGradient id="bl-drip" cx="40%" cy="20%" r="80%">
+      <stop offset="0%" stop-color="#e84444"/>
+      <stop offset="50%" stop-color="#b71c1c"/>
+      <stop offset="100%" stop-color="#7a0000"/>
+    </radialGradient>
+    <linearGradient id="bl-shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="bl-shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="bl-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff0000" stop-opacity="0"/>
+      <stop offset="70%" stop-color="#ff0000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#ff0000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="100" cy="172" rx="72" ry="14" fill="url(#bl-shadow)"/>
+
+  <path d="M 34 168 Q 36 175, 38 182 Q 39 188, 36 192 Q 33 190, 32 184 Q 30 176, 32 168 Z" fill="url(#bl-drip)"/>
+  <path d="M 164 165 Q 166 174, 168 182 Q 169 188, 166 192 Q 163 189, 162 182 Q 160 173, 162 165 Z" fill="url(#bl-drip)"/>
+  <path d="M 98 175 Q 100 185, 98 193 Q 95 190, 94 183 Q 93 176, 96 170 Z" fill="url(#bl-drip)"/>
+
+  <path d="M 32 140 C 28 115, 48 105, 70 108 C 65 92, 80 82, 100 85 C 96 68, 112 58, 130 62 C 126 48, 140 40, 152 45 C 165 38, 178 48, 172 62 C 182 66, 184 82, 172 90 C 182 98, 180 118, 166 124 C 172 138, 155 150, 138 145 C 130 155, 108 155, 98 145 C 80 152, 52 150, 40 142 C 34 145, 30 143, 32 140 Z" fill="url(#bl-base)"/>
+
+  <path d="M 45 132 C 42 115, 58 108, 76 110 C 72 96, 86 88, 102 91 C 99 78, 112 70, 126 73 C 123 60, 136 54, 146 58 C 156 52, 166 60, 160 72 C 168 76, 168 90, 158 95 C 165 103, 162 118, 150 122 C 154 133, 140 142, 126 138 C 120 146, 102 146, 94 138 C 80 143, 58 141, 50 135 Z" fill="url(#bl-mid)"/>
+
+  <path d="M 62 118 C 60 105, 72 100, 84 102 C 81 90, 92 84, 104 86 C 102 76, 114 72, 122 75 C 130 70, 138 76, 134 86 C 140 90, 140 100, 132 104 C 136 112, 128 120, 118 118 C 114 124, 100 124, 94 118 C 84 122, 70 120, 64 118 Z" fill="url(#bl-top)"/>
+
+  <path d="M 80 98 C 78 88, 88 84, 96 86 C 94 78, 102 74, 110 76 C 116 72, 122 78, 118 86 C 122 90, 120 98, 114 100 C 116 106, 108 110, 100 108 C 92 110, 82 106, 80 98 Z" fill="url(#bl-top)"/>
+
+  <path d="M 94 82 C 92 75, 98 71, 104 73 C 102 68, 108 66, 112 69 L 116 78 C 114 82, 108 84, 104 83 C 100 84, 95 84, 94 82 Z" fill="url(#bl-top)"/>
+
+  <ellipse cx="70" cy="110" rx="14" ry="7" fill="url(#bl-shine)" transform="rotate(-20 70 110)"/>
+  <ellipse cx="88" cy="92" rx="10" ry="5" fill="url(#bl-shine)" transform="rotate(-15 88 92)"/>
+  <ellipse cx="104" cy="78" rx="7" ry="4" fill="url(#bl-shine)" transform="rotate(-10 104 78)"/>
+
+  <circle cx="60" cy="128" r="3" fill="#4a0000" opacity="0.6"/>
+  <circle cx="110" cy="120" r="2.5" fill="#4a0000" opacity="0.5"/>
+  <circle cx="140" cy="110" r="3" fill="#4a0000" opacity="0.5"/>
+  <circle cx="85" cy="100" r="2" fill="#4a0000" opacity="0.4"/>
+  <circle cx="125" cy="88" r="2.5" fill="#4a0000" opacity="0.5"/>
+  <circle cx="100" cy="135" r="2" fill="#4a0000" opacity="0.4"/>
+</svg>

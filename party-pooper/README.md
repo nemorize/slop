@@ -1,4 +1,4 @@
-# Poop Chain
+# Party Pooper
 
 A chain-reaction clicking game where poop falls from the sky. Tap a falling poop to detonate it — if other poops are caught in the blast radius, they explode too, triggering an explosive chain reaction with squishy sound effects.
 
