@@ -11,6 +11,7 @@ A repository for collecting AI slops generated to avoid wasting leftover tokens 
 ## Rules
 
 - **Folder-based**: Every project must live in its own dedicated folder.
+- **Web service**: Projects must ultimately be web services that can be hosted on [GitHub Pages](https://docs.github.com/en/pages).
 - **Topic/stack agnostic**: There are no restrictions on language, framework, or subject.
 - **Legal compliance**: Content that violates the laws of the Republic of Korea or [GitHub's policies](https://docs.github.com/en/site-policy) is not permitted.
 
