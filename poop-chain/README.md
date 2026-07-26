@@ -35,3 +35,14 @@ Different poops fall from the sky, each with a distinct look, size, and point va
 - Vanilla HTML / CSS / JavaScript
 - Canvas 2D rendering
 - Web Audio API for sound synthesis
+
+## Image Credits
+
+Poop images sourced from [Wikimedia Commons](https://commons.wikimedia.org/):
+
+| Type | Source | License |
+|------|--------|---------|
+| Human | [Human Feces (cropped)](https://commons.wikimedia.org/wiki/File:Human_Feces_(cropped).jpg) | CC BY-SA 2.5 |
+| Dog | [Dog feces J1](https://commons.wikimedia.org/wiki/File:Dog_feces_J1.jpg) | CC BY-SA 4.0 |
+| Bird | [Guano](https://commons.wikimedia.org/wiki/File:Guano.jpg) | CC BY-SA 3.0 |
+| Cow | [Cow dung 34](https://commons.wikimedia.org/wiki/File:Cow_dung_34.jpg) | CC0 (Public Domain) |
