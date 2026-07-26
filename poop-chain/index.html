@@ -140,7 +140,7 @@ function initAudio() {
 }
 
 function playPlop() {
-  if (!audioCtx || activeSounds > 40) return;
+  if (!audioCtx || activeSounds > 60) return;
   activeSounds++;
   const now = audioCtx.currentTime;
 
@@ -176,11 +176,11 @@ function playPlop() {
 }
 
 // ===== Config =====
-const GRAVITY = 280;
-const POOP_R = 26;
-const EXPLOSION_R = 78;
+const GRAVITY = 200;
+const POOP_R = 22;
+const EXPLOSION_R = 145;
 const GAME_TIME = 30;
-const SPAWN_BASE = 0.55;
+const SPAWN_BASE = 0.18;
 
 // ===== State =====
 let poops = [];
@@ -275,7 +275,7 @@ class Poop {
     if (this.settled) {
       this.settleTime += dt;
       this.wobble += dt * 1.5;
-      if (this.settleTime > 5) this.alpha = Math.max(0, this.alpha - dt * 0.4);
+      if (this.settleTime > 8) this.alpha = Math.max(0, this.alpha - dt * 0.4);
       return;
     }
 
@@ -356,7 +356,7 @@ class Poop {
 
     explosions.push(new Explosion(this.x, this.y));
 
-    const count = 14;
+    const count = 18;
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 + Math.random() * 0.4;
       const sp = 120 + Math.random() * 220;
@@ -468,8 +468,12 @@ class FloatText {
 
 // ===== Spawning =====
 function spawnPoop() {
-  const x = 40 + Math.random() * (W - 80);
-  poops.push(new Poop(x, -40));
+  const cluster = 3 + Math.floor(Math.random() * 4);
+  const cx = 40 + Math.random() * (W - 80);
+  for (let i = 0; i < cluster; i++) {
+    const x = Math.max(20, Math.min(W - 20, cx + (Math.random() - 0.5) * 160));
+    poops.push(new Poop(x, -40 - Math.random() * 120));
+  }
 }
 
 // ===== Input =====
@@ -525,7 +529,7 @@ function update(dt) {
   timeLeft = Math.max(0, GAME_TIME - elapsedTime);
   if (timeLeft <= 0) { endGame(); return; }
 
-  const spawnRate = SPAWN_BASE - Math.min(elapsedTime / GAME_TIME, 1) * 0.25;
+  const spawnRate = SPAWN_BASE - Math.min(elapsedTime / GAME_TIME, 1) * 0.08;
   spawnTimer += dt;
   while (spawnTimer >= spawnRate) {
     spawnTimer -= spawnRate;
