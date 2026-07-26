@@ -196,9 +196,9 @@ function playSquish(sizeRatio) {
 
 // ===== Config =====
 const GRAVITY = 200;
-const EXPLOSION_R = 145;
+const EXPLOSION_R = 80;
 const GAME_TIME = 30;
-const SPAWN_BASE = 0.18;
+const SPAWN_BASE = 0.12;
 
 // ===== Poop Types =====
 const POOP_TYPES = [
@@ -490,7 +490,7 @@ class FloatText {
 
 // ===== Spawning =====
 function spawnPoop() {
-  const cluster = 3 + Math.floor(Math.random() * 4);
+  const cluster = 6 + Math.floor(Math.random() * 6);
   const cx = 40 + Math.random() * (W - 80);
   for (let i = 0; i < cluster; i++) {
     const x = Math.max(20, Math.min(W - 20, cx + (Math.random() - 0.5) * 160));
@@ -551,7 +551,7 @@ function update(dt) {
   timeLeft = Math.max(0, GAME_TIME - elapsedTime);
   if (timeLeft <= 0) { endGame(); return; }
 
-  const spawnRate = SPAWN_BASE - Math.min(elapsedTime / GAME_TIME, 1) * 0.08;
+  const spawnRate = SPAWN_BASE - Math.min(elapsedTime / GAME_TIME, 1) * 0.05;
   spawnTimer += dt;
   while (spawnTimer >= spawnRate) {
     spawnTimer -= spawnRate;
