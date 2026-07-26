@@ -38,13 +38,6 @@ Different poops fall from the sky, each with a distinct look, size, and point va
 
 ## Image Credits
 
-Poop images sourced from [Wikimedia Commons](https://commons.wikimedia.org/):
+Poop illustrations are custom-drawn SVGs.
 
-| Type | Source | License |
-|------|--------|---------|
-| Human | [Human Feces (cropped)](https://commons.wikimedia.org/wiki/File:Human_Feces_(cropped).jpg) | CC BY-SA 2.5 |
-| Dog | [Dog feces J1](https://commons.wikimedia.org/wiki/File:Dog_feces_J1.jpg) | CC BY-SA 4.0 |
-| Bird | [Guano](https://commons.wikimedia.org/wiki/File:Guano.jpg) | CC BY-SA 3.0 |
-| Cow | [Cow dung 34](https://commons.wikimedia.org/wiki/File:Cow_dung_34.jpg) | CC0 (Public Domain) |
-
-Sound effects (squish/slime/impact) sourced from [Kenney](https://kenney.nl/assets) via [Cy4nWare/sfx-api](https://github.com/Cy4nWare/sfx-api), licensed under **CC0 1.0 Universal (Public Domain)**.
+Poop illustrations are custom-drawn SVGs. Sound effects (squish/slime/impact) sourced from [Kenney](https://kenney.nl/assets) via [Cy4nWare/sfx-api](https://github.com/Cy4nWare/sfx-api), licensed under **CC0 1.0 Universal (Public Domain)**.

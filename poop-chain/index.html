@@ -145,7 +145,7 @@ function preloadImages() {
     const img = new Image();
     img.onload = () => { POOP_IMAGES[t] = img; resolve(); };
     img.onerror = () => { resolve(); };
-    img.src = 'assets/' + t + '.jpg';
+    img.src = 'assets/' + t + '.svg';
   }))).then(() => { imagesLoaded = true; });
 }
 preloadImages();
