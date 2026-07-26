@@ -90,9 +90,15 @@
   <div id="start-screen" class="overlay">
     <div class="emoji">💩</div>
     <h1>Poop Chain</h1>
-    <p>Tap falling poops to detonate them. Each explosion triggers nearby poops in a chain reaction. How big can your chain get?</p>
+    <p>Tap falling poops to detonate them. Each explosion triggers nearby poops in a chain reaction. Different poops are worth different points!</p>
     <button class="btn" id="start-btn">Start Game</button>
-    <div class="how-to">Click / tap poops to explode them<br>Bigger chains = bigger scores<br>30 seconds — go!</div>
+    <div class="how-to">
+      <span style="color:#d4d4aa">●</span> Bird Drop — 10pts &nbsp;
+      <span style="color:#8b6f47">●</span> Dog Poop — 25pts &nbsp;
+      <span style="color:#7a5230">●</span> Human Poop — 50pts &nbsp;
+      <span style="color:#5a4a20">●</span> Cow Dung — 70pts<br>
+      Bigger chains = bigger scores &nbsp;|&nbsp; 30 seconds — go!
+    </div>
   </div>
 
   <div id="gameover-screen" class="overlay hidden">
@@ -139,12 +145,12 @@ function initAudio() {
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-function playPlop() {
+function playPlop(sizeRatio) {
   if (!audioCtx || activeSounds > 60) return;
   activeSounds++;
   const now = audioCtx.currentTime;
 
-  const baseFreq = 120 + Math.random() * 80;
+  const baseFreq = (180 - sizeRatio * 100) + Math.random() * 60;
 
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -177,10 +183,40 @@ function playPlop() {
 
 // ===== Config =====
 const GRAVITY = 200;
-const POOP_R = 22;
 const EXPLOSION_R = 145;
 const GAME_TIME = 30;
 const SPAWN_BASE = 0.18;
+
+// ===== Poop Types =====
+const POOP_TYPES = [
+  {
+    name: 'bird',  r: 20, basePts: 10, weight: 38,
+    particleColors: ['#e8e8d0', '#d4d4aa', '#b8b890', '#f0f0e0'],
+    draw: drawBirdPoop,
+  },
+  {
+    name: 'dog',   r: 34, basePts: 25, weight: 28,
+    particleColors: ['#8b6f47', '#6b4423', '#4a3018'],
+    draw: drawDogPoop,
+  },
+  {
+    name: 'human', r: 42, basePts: 50, weight: 22,
+    particleColors: ['#7a5230', '#5c3d22', '#6b4423'],
+    draw: drawHumanPoop,
+  },
+  {
+    name: 'cow',   r: 50, basePts: 70, weight: 12,
+    particleColors: ['#7a6b3a', '#5a4a20', '#3d3215'],
+    draw: drawCowDung,
+  },
+];
+
+const TYPE_WEIGHT_TOTAL = POOP_TYPES.reduce((s, t) => s + t.weight, 0);
+function randomPoopType() {
+  let r = Math.random() * TYPE_WEIGHT_TOTAL;
+  for (const t of POOP_TYPES) { r -= t.weight; if (r <= 0) return t; }
+  return POOP_TYPES[0];
+}
 
 // ===== State =====
 let poops = [];
@@ -202,8 +238,9 @@ for (let i = 0; i < 60; i++) {
   stars.push({ x: Math.random(), y: Math.random() * 0.7, r: Math.random() * 1.5 + 0.3, p: Math.random() * Math.PI * 2 });
 }
 
-// ===== Poop Shape =====
-function drawPoop(ctx, r, squish) {
+// ===== Poop Drawing Functions =====
+
+function drawHumanPoop(ctx, r, squish) {
   ctx.fillStyle = 'rgba(0,0,0,0.18)';
   ctx.beginPath();
   ctx.ellipse(0, r * 0.65, r * 0.8, r * 0.22, 0, 0, Math.PI * 2);
@@ -239,9 +276,152 @@ function drawPoop(ctx, r, squish) {
 
   if (squish > 0.01) {
     ctx.strokeStyle = 'rgba(248,81,73,' + squish + ')';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.ellipse(0, r * 0.25, r, r * 0.68, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawDogPoop(ctx, r, squish) {
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.55, r * 0.85, r * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const grad = ctx.createRadialGradient(-r * 0.2, -r * 0.2, 0, 0, 0, r * 1.2);
+  grad.addColorStop(0, '#9a8050');
+  grad.addColorStop(0.5, '#6b4423');
+  grad.addColorStop(1, '#4a3018');
+  ctx.fillStyle = grad;
+
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.2, r * 0.95, r * 0.65, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.18, -r * 0.18, r * 0.62, r * 0.5, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(r * 0.12, -r * 0.42, r * 0.46, r * 0.38, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(r * 0.05, -r * 0.65, r * 0.28, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.32, 0, r * 0.2, r * 0.12, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (squish > 0.01) {
+    ctx.strokeStyle = 'rgba(248,81,73,' + squish + ')';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.2, r * 0.95, r * 0.65, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawBirdPoop(ctx, r, squish) {
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.5, r * 0.7, r * 0.18, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+  grad.addColorStop(0, '#f5f5e8');
+  grad.addColorStop(0.6, '#d4d4aa');
+  grad.addColorStop(1, '#b0b080');
+  ctx.fillStyle = grad;
+
+  ctx.beginPath();
+  ctx.ellipse(r * 0.6, r * 0.3, r * 0.3, r * 0.2, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.55, r * 0.25, r * 0.25, r * 0.18, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(r * 0.1, r * 0.55, r * 0.2, r * 0.25, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.3, -r * 0.1, r * 0.18, r * 0.15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#e8e8d0';
+  ctx.beginPath();
+  ctx.ellipse(0, -r * 0.15, r * 0.5, r * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.15, -r * 0.25, r * 0.18, r * 0.12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (squish > 0.01) {
+    ctx.strokeStyle = 'rgba(248,81,73,' + squish + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(0, -r * 0.15, r * 0.5, r * 0.42, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawCowDung(ctx, r, squish) {
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.35, r * 0.9, r * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const grad = ctx.createRadialGradient(0, -r * 0.1, 0, 0, 0, r);
+  grad.addColorStop(0, '#8a7a4a');
+  grad.addColorStop(0.5, '#5a4a20');
+  grad.addColorStop(1, '#3d3215');
+  ctx.fillStyle = grad;
+
+  const segs = 14;
+  ctx.beginPath();
+  for (let i = 0; i <= segs; i++) {
+    const a = (i / segs) * Math.PI * 2;
+    const w = 0.85 + Math.sin(a * 3) * 0.1 + Math.cos(a * 5) * 0.05;
+    const px = Math.cos(a) * r * w;
+    const py = Math.sin(a) * r * 0.65 * w;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(50, 40, 20, 0.4)';
+  ctx.lineWidth = 1.5;
+  for (let ring = 0; ring < 3; ring++) {
+    const rr = r * (0.72 - ring * 0.18);
+    ctx.beginPath();
+    for (let i = 0; i <= segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
+      const w = 0.85 + Math.sin(a * 3 + ring) * 0.08;
+      const px = Math.cos(a) * rr * w;
+      const py = Math.sin(a) * rr * 0.65 * w;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = 'rgba(122, 107, 58, 0.6)';
+  ctx.beginPath();
+  ctx.ellipse(0, -r * 0.05, r * 0.25, r * 0.15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (squish > 0.01) {
+    ctx.strokeStyle = 'rgba(248,81,73,' + squish + ')';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.9, 0, Math.PI * 2);
     ctx.stroke();
   }
 }
@@ -249,11 +429,12 @@ function drawPoop(ctx, r, squish) {
 // ===== Classes =====
 class Poop {
   constructor(x, y) {
+    this.type = randomPoopType();
     this.x = x;
     this.y = y;
     this.vx = (Math.random() - 0.5) * 25;
     this.vy = 20 + Math.random() * 30;
-    this.r = POOP_R + (Math.random() - 0.5) * 6;
+    this.r = this.type.r + (Math.random() - 0.5) * 6;
     this.rot = Math.random() * Math.PI * 2;
     this.rotSpeed = (Math.random() - 0.5) * 1.5;
     this.wobble = Math.random() * Math.PI * 2;
@@ -329,7 +510,7 @@ class Poop {
     }
     ctx.scale(sx, sy);
     ctx.rotate(this.rot);
-    drawPoop(ctx, this.r, this.trigger >= 0 ? (1 - this.trigger / 0.12) : 0);
+    this.type.draw(ctx, this.r, this.trigger >= 0 ? (1 - this.trigger / 0.12) : 0);
     ctx.restore();
   }
 
@@ -347,12 +528,12 @@ class Poop {
     combo++;
     comboTimer = 0.6;
     if (combo > maxCombo) maxCombo = combo;
-    const pts = 10 * combo;
+    const pts = this.type.basePts * combo;
     score += pts;
 
     floatTexts.push(new FloatText(this.x, this.y - this.r, '+' + pts, combo));
 
-    playPlop();
+    playPlop(this.r / 50);
 
     explosions.push(new Explosion(this.x, this.y));
 
@@ -360,7 +541,7 @@ class Poop {
     for (let i = 0; i < count; i++) {
       const a = (i / count) * Math.PI * 2 + Math.random() * 0.4;
       const sp = 120 + Math.random() * 220;
-      particles.push(new Particle(this.x, this.y, Math.cos(a) * sp, Math.sin(a) * sp, this.r * (0.2 + Math.random() * 0.3)));
+      particles.push(new Particle(this.x, this.y, Math.cos(a) * sp, Math.sin(a) * sp, this.r * (0.2 + Math.random() * 0.3), this.type.particleColors));
     }
 
     shake = Math.min(shake + 2.5, 14);
@@ -409,15 +590,15 @@ class Explosion {
 }
 
 class Particle {
-  constructor(x, y, vx, vy, r) {
+  constructor(x, y, vx, vy, r, colors) {
     this.x = x; this.y = y;
     this.vx = vx; this.vy = vy;
     this.r = r;
     this.life = 1;
     this.rot = Math.random() * Math.PI * 2;
     this.rotSpeed = (Math.random() - 0.5) * 8;
-    const shades = ['#5c3d22', '#7a5230', '#8b6f47', '#6b4423'];
-    this.color = shades[Math.floor(Math.random() * shades.length)];
+    const palette = colors || ['#7a5230', '#5c3d22', '#8b6f47', '#6b4423'];
+    this.color = palette[Math.floor(Math.random() * palette.length)];
   }
   update(dt) {
     this.vy += 400 * dt;

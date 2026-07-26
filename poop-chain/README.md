@@ -9,9 +9,22 @@ A chain-reaction clicking game where poop falls from the sky. Tap a falling poop
 - Bigger chains earn exponentially more points (combo multiplier)
 - Score as many explosions as possible before the **30-second** timer runs out
 
+## Poop Types
+
+Different poops fall from the sky, each with a distinct look, size, and point value:
+
+| Type | Points | Rarity | Notes |
+|------|--------|--------|-------|
+| Bird Drop | 10 | Common | Small, white splat — easy to miss but everywhere |
+| Dog Poop | 25 | Common | Medium brown coil |
+| Human Poop | 50 | Uncommon | Classic tall swirl — satisfying to pop |
+| Cow Dung | 70 | Rare | Large flat patty — huge blast radius, big points |
+
 ## Features
 
+- Four distinct poop types drawn procedurally on canvas
 - Procedural squish/plop sound effects (Web Audio API — no audio files needed)
+- Sound pitch varies by poop size
 - Cascade chain reactions with visual and audio feedback
 - Screen shake and particle splatter on explosions
 - Poops pile up at the bottom for dense chain opportunities
