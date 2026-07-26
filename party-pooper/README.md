@@ -19,6 +19,7 @@ Different poops fall from the sky, each with a distinct look, size, and point va
 | Dog Poop | 25 | Common | Medium brown coil |
 | Human Poop | 50 | Uncommon | Classic tall swirl — satisfying to pop |
 | Cow Dung | 70 | Rare | Large flat patty — huge blast radius, big points |
+| Blood Poop | -30% score | Rare | DON'T TOUCH! Washes away all poops on screen |
 
 ## Features
 
