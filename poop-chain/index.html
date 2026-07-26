@@ -151,99 +151,47 @@ function preloadImages() {
 preloadImages();
 
 // ===== Audio =====
+const SOUND_FILES = ['squish1.ogg', 'squish3.ogg', 'squish4.ogg', 'squish5.ogg', 'squish6.ogg'];
 let audioCtx = null;
 let activeSounds = 0;
+const SQUISH_BUFFERS = [];
+const pendingBuffers = [];
+
+SOUND_FILES.forEach(f => {
+  fetch('assets/' + f)
+    .then(r => r.arrayBuffer())
+    .then(buf => pendingBuffers.push(buf))
+    .catch(() => {});
+});
 
 function initAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    while (pendingBuffers.length) {
+      const buf = pendingBuffers.shift();
+      audioCtx.decodeAudioData(buf)
+        .then(decoded => SQUISH_BUFFERS.push(decoded))
+        .catch(() => {});
+    }
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-// Crackle buffer reused across all squish sounds
-let crackleBuf = null;
-function ensureCrackleBuf() {
-  if (crackleBuf) return;
-  const len = Math.floor(audioCtx.sampleRate * 0.005);
-  crackleBuf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-  const d = crackleBuf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
-}
-
 function playSquish(sizeRatio) {
-  if (!audioCtx || activeSounds > 60) return;
+  if (!audioCtx || SQUISH_BUFFERS.length === 0 || activeSounds > 60) return;
   activeSounds++;
-  ensureCrackleBuf();
-  const now = audioCtx.currentTime;
-  const dur = 0.14 + sizeRatio * 0.06;
-
-  // === Main squelch: white noise through resonant lowpass with frequency sweep ===
-  const noiseLen = Math.floor(audioCtx.sampleRate * dur);
-  const nBuf = audioCtx.createBuffer(1, noiseLen, audioCtx.sampleRate);
-  const nData = nBuf.getChannelData(0);
-  for (let i = 0; i < noiseLen; i++) nData[i] = Math.random() * 2 - 1;
-
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = nBuf;
-
-  const lp = audioCtx.createBiquadFilter();
-  lp.type = 'lowpass';
-  lp.Q.value = 16 + sizeRatio * 8;
-  lp.frequency.setValueAtTime(1600 + Math.random() * 600, now);
-  lp.frequency.exponentialRampToValueAtTime(350, now + dur * 0.35);
-  lp.frequency.exponentialRampToValueAtTime(90, now + dur);
-
-  // Sawtooth LFO modulating filter freq — creates the wet bubbling squelch
-  const lfo = audioCtx.createOscillator();
-  const lfoGain = audioCtx.createGain();
-  lfo.type = 'sawtooth';
-  lfo.frequency.value = 16 + Math.random() * 14 + sizeRatio * 6;
-  lfoGain.gain.value = 130;
-  lfo.connect(lfoGain).connect(lp.frequency);
-  lfo.start(now);
-  lfo.stop(now + dur);
-
+  const buf = SQUISH_BUFFERS[Math.floor(Math.random() * SQUISH_BUFFERS.length)];
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  const pitch = Math.max(0.5, 0.85 + Math.random() * 0.3 - sizeRatio * 0.15);
+  src.playbackRate.value = pitch;
   const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.38, now + 0.004);
-  gain.gain.setValueAtTime(0.38, now + dur * 0.4);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-
-  noise.connect(lp).connect(gain).connect(audioCtx.destination);
-  noise.start(now);
-  noise.stop(now + dur);
-
-  // === Soft low body (squish impact) ===
-  const osc = audioCtx.createOscillator();
-  const oscGain = audioCtx.createGain();
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(95 - sizeRatio * 30 + Math.random() * 15, now);
-  osc.frequency.exponentialRampToValueAtTime(35, now + 0.05);
-  oscGain.gain.setValueAtTime(0.1, now);
-  oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-  osc.connect(oscGain).connect(audioCtx.destination);
-  osc.start(now);
-  osc.stop(now + 0.07);
-
-  // === Crackles for the wet "지직" texture ===
-  const crackleCount = 3;
-  for (let i = 0; i < crackleCount; i++) {
-    const t = now + 0.012 + Math.random() * (dur * 0.75);
-    const cn = audioCtx.createBufferSource();
-    cn.buffer = crackleBuf;
-    const cf = audioCtx.createBiquadFilter();
-    cf.type = 'bandpass';
-    cf.frequency.value = 2200 + Math.random() * 2600;
-    cf.Q.value = 4;
-    const cg = audioCtx.createGain();
-    cg.gain.value = 0.07 + Math.random() * 0.04;
-    cn.connect(cf).connect(cg).connect(audioCtx.destination);
-    cn.start(t);
-    cn.stop(t + 0.006);
-  }
-
-  noise.onended = () => { activeSounds--; };
+  const now = audioCtx.currentTime;
+  gain.gain.setValueAtTime(0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + buf.duration / pitch + 0.02);
+  src.connect(gain).connect(audioCtx.destination);
+  src.start(now);
+  src.onended = () => { activeSounds--; };
 }
 
 // ===== Config =====

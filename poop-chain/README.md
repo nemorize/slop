@@ -46,3 +46,5 @@ Poop images sourced from [Wikimedia Commons](https://commons.wikimedia.org/):
 | Dog | [Dog feces J1](https://commons.wikimedia.org/wiki/File:Dog_feces_J1.jpg) | CC BY-SA 4.0 |
 | Bird | [Guano](https://commons.wikimedia.org/wiki/File:Guano.jpg) | CC BY-SA 3.0 |
 | Cow | [Cow dung 34](https://commons.wikimedia.org/wiki/File:Cow_dung_34.jpg) | CC0 (Public Domain) |
+
+Sound effects (squish/slime/impact) sourced from [Kenney](https://kenney.nl/assets) via [Cy4nWare/sfx-api](https://github.com/Cy4nWare/sfx-api), licensed under **CC0 1.0 Universal (Public Domain)**.
