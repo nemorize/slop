@@ -538,7 +538,7 @@ class FloatText {
 }
 
 // ===== Wash Effect =====
-const WATER_COLORS = ['#4fc3f7', '#29b6f6', '#81d4fa', '#b3e5fc', '#03a9f4', '#0288d1'];
+const WATER_COLORS = ['#ff6b6b', '#ff5252', '#ff8a80', '#ff1744', '#d50000', '#e53935'];
 
 function triggerWash(x, y) {
   washWave = { x, y, radius: 0, maxRadius: Math.max(W, H) * 1.5, life: 1 };
@@ -704,16 +704,16 @@ function render() {
     ctx.save();
     ctx.globalAlpha = Math.max(0, washWave.life * 0.35);
     const wg = ctx.createRadialGradient(washWave.x, washWave.y, washWave.radius * 0.5, washWave.x, washWave.y, washWave.radius);
-    wg.addColorStop(0, 'rgba(79, 195, 247, 0.8)');
-    wg.addColorStop(0.7, 'rgba(41, 182, 246, 0.4)');
-    wg.addColorStop(1, 'rgba(2, 136, 209, 0)');
+    wg.addColorStop(0, 'rgba(255, 82, 82, 0.8)');
+    wg.addColorStop(0.7, 'rgba(213, 0, 0, 0.4)');
+    wg.addColorStop(1, 'rgba(158, 0, 0, 0)');
     ctx.fillStyle = wg;
     ctx.beginPath();
     ctx.arc(washWave.x, washWave.y, washWave.radius, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.globalAlpha = Math.max(0, washWave.life);
-    ctx.strokeStyle = '#81d4fa';
+    ctx.strokeStyle = '#ff5252';
     ctx.lineWidth = 5 * washWave.life;
     ctx.beginPath();
     ctx.arc(washWave.x, washWave.y, washWave.radius, 0, Math.PI * 2);
