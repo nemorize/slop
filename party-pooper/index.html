@@ -197,7 +197,7 @@ function playSquish(sizeRatio) {
 
 // ===== Config =====
 const GRAVITY = 200;
-const EXPLOSION_R = 80;
+const EXPLOSION_R = 55;
 const GAME_TIME = 30;
 const SPAWN_BASE = 0.12;
 
@@ -438,7 +438,7 @@ class Poop {
 
     for (let i = 0; i < poops.length; i++) {
       const o = poops[i];
-      if (o === this || o.exploded || o.trigger >= 0 || o.type.blood) continue;
+      if (o === this || o.exploded || o.trigger >= 0) continue;
       const dx = o.x - this.x;
       const dy = o.y - this.y;
       const reach = EXPLOSION_R + o.r;
