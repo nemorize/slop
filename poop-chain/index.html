@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Poop Chain</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1117; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; touch-action: none; }
+    canvas { display: block; position: fixed; top: 0; left: 0; cursor: crosshair; }
+
+    #hud {
+      position: fixed; top: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 20px 28px; pointer-events: none; z-index: 10;
+    }
+    .hud-item {
+      background: rgba(22, 27, 34, 0.85);
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 10px 20px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .hud-label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 1.5px; }
+    .hud-value { font-size: 28px; font-weight: 800; color: #e6edf3; line-height: 1.1; }
+    .hud-value.timer { color: #58a6ff; }
+    .hud-value.danger { color: #f85149; }
+
+    #combo-display {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 64px; font-weight: 900;
+      color: #b08d5e; text-shadow: 0 0 30px rgba(176, 141, 94, 0.6);
+      pointer-events: none; z-index: 5;
+      opacity: 0; transition: opacity 0.15s;
+      letter-spacing: -2px;
+    }
+
+    .overlay {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: rgba(13, 17, 23, 0.92);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 20; text-align: center; padding: 40px;
+    }
+    .overlay.hidden { display: none; }
+    .overlay h1 { font-size: 48px; font-weight: 900; color: #e6edf3; margin-bottom: 8px; letter-spacing: -1px; }
+    .overlay .emoji { font-size: 72px; margin-bottom: 12px; }
+    .overlay p { color: #8b949e; font-size: 16px; max-width: 420px; line-height: 1.6; margin-bottom: 28px; }
+    .overlay .stats { display: flex; gap: 40px; margin-bottom: 32px; }
+    .overlay .stat { text-align: center; }
+    .overlay .stat-label { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+    .overlay .stat-value { font-size: 36px; font-weight: 800; color: #b08d5e; }
+
+    .btn {
+      padding: 16px 48px;
+      font-size: 18px; font-weight: 700;
+      color: #fff; background: #7a5230;
+      border: none; border-radius: 12px;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.5px;
+    }
+    .btn:hover { background: #8b6f47; transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+
+    .how-to { color: #6e7681; font-size: 13px; margin-top: 24px; line-height: 1.8; }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-item">
+      <div class="hud-label">Score</div>
+      <div class="hud-value" id="score">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label">Time</div>
+      <div class="hud-value timer" id="timer">30</div>
+    </div>
+  </div>
+
+  <div id="combo-display"></div>
+
+  <div id="start-screen" class="overlay">
+    <div class="emoji">💩</div>
+    <h1>Poop Chain</h1>
+    <p>Tap falling poops to detonate them. Each explosion triggers nearby poops in a chain reaction. How big can your chain get?</p>
+    <button class="btn" id="start-btn">Start Game</button>
+    <div class="how-to">Click / tap poops to explode them<br>Bigger chains = bigger scores<br>30 seconds — go!</div>
+  </div>
+
+  <div id="gameover-screen" class="overlay hidden">
+    <div class="emoji">💥</div>
+    <h1>Time's Up!</h1>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Final Score</div>
+        <div class="stat-value" id="final-score">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Best Chain</div>
+        <div class="stat-value" id="best-chain">0</div>
+      </div>
+    </div>
+    <button class="btn" id="restart-btn">Play Again</button>
+  </div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ===== Audio =====
+let audioCtx = null;
+let activeSounds = 0;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playPlop() {
+  if (!audioCtx || activeSounds > 40) return;
+  activeSounds++;
+  const now = audioCtx.currentTime;
+
+  const baseFreq = 120 + Math.random() * 80;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(baseFreq, now);
+  osc.frequency.exponentialRampToValueAtTime(35, now + 0.1);
+  gain.gain.setValueAtTime(0.22, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.14);
+
+  const len = Math.floor(audioCtx.sampleRate * 0.06);
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buf;
+  const nGain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 500 + Math.random() * 500;
+  nGain.gain.setValueAtTime(0.1, now);
+  nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+  noise.connect(filter).connect(nGain).connect(audioCtx.destination);
+  noise.start(now);
+
+  osc.onended = () => { activeSounds--; };
+}
+
+// ===== Config =====
+const GRAVITY = 280;
+const POOP_R = 26;
+const EXPLOSION_R = 78;
+const GAME_TIME = 30;
+const SPAWN_BASE = 0.55;
+
+// ===== State =====
+let poops = [];
+let explosions = [];
+let particles = [];
+let floatTexts = [];
+let stars = [];
+let score = 0;
+let timeLeft = GAME_TIME;
+let combo = 0;
+let maxCombo = 0;
+let comboTimer = 0;
+let gameState = 'menu';
+let spawnTimer = 0;
+let elapsedTime = 0;
+let shake = 0;
+
+for (let i = 0; i < 60; i++) {
+  stars.push({ x: Math.random(), y: Math.random() * 0.7, r: Math.random() * 1.5 + 0.3, p: Math.random() * Math.PI * 2 });
+}
+
+// ===== Poop Shape =====
+function drawPoop(ctx, r, squish) {
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.65, r * 0.8, r * 0.22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const grad = ctx.createLinearGradient(0, -r * 1.2, 0, r * 0.6);
+  grad.addColorStop(0, '#a07d50');
+  grad.addColorStop(0.45, '#7a5230');
+  grad.addColorStop(1, '#553820');
+  ctx.fillStyle = grad;
+
+  ctx.beginPath();
+  ctx.ellipse(0, r * 0.25, r, r * 0.68, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(0, -r * 0.18, r * 0.72, r * 0.52, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.ellipse(0, -r * 0.5, r * 0.48, r * 0.38, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-r * 0.18, -r * 0.68);
+  ctx.quadraticCurveTo(0, -r * 1.1, r * 0.18, -r * 0.68);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.13)';
+  ctx.beginPath();
+  ctx.ellipse(-r * 0.28, -r * 0.15, r * 0.22, r * 0.13, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (squish > 0.01) {
+    ctx.strokeStyle = 'rgba(248,81,73,' + squish + ')';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(0, r * 0.25, r, r * 0.68, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+// ===== Classes =====
+class Poop {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.vx = (Math.random() - 0.5) * 25;
+    this.vy = 20 + Math.random() * 30;
+    this.r = POOP_R + (Math.random() - 0.5) * 6;
+    this.rot = Math.random() * Math.PI * 2;
+    this.rotSpeed = (Math.random() - 0.5) * 1.5;
+    this.wobble = Math.random() * Math.PI * 2;
+    this.exploded = false;
+    this.settled = false;
+    this.settleTime = 0;
+    this.alpha = 1;
+    this.trigger = -1;
+  }
+
+  update(dt) {
+    if (this.trigger >= 0) {
+      this.trigger -= dt;
+      this.wobble += dt * 30;
+      if (this.trigger <= 0) { this.explode(); return; }
+      return;
+    }
+
+    if (this.settled) {
+      this.settleTime += dt;
+      this.wobble += dt * 1.5;
+      if (this.settleTime > 5) this.alpha = Math.max(0, this.alpha - dt * 0.4);
+      return;
+    }
+
+    this.vy += GRAVITY * dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.rot += this.rotSpeed * dt;
+    this.wobble += dt * 4;
+
+    if (this.x < this.r) { this.x = this.r; this.vx = Math.abs(this.vx) * 0.4; }
+    if (this.x > W - this.r) { this.x = W - this.r; this.vx = -Math.abs(this.vx) * 0.4; }
+
+    if (this.y > H - this.r - 30) {
+      this.y = H - this.r - 30;
+      this.vy = 0; this.vx = 0;
+      this.settled = true;
+    }
+
+    for (let i = 0; i < poops.length; i++) {
+      const o = poops[i];
+      if (o === this || !o.settled || o.exploded) continue;
+      const dx = this.x - o.x;
+      const dy = this.y - o.y;
+      const d2 = dx * dx + dy * dy;
+      const minD = this.r + o.r;
+      if (d2 < minD * minD) {
+        const d = Math.sqrt(d2) || 0.01;
+        this.x = o.x + (dx / d) * minD;
+        this.y = o.y + (dy / d) * minD;
+        this.vy = 0; this.vx = 0;
+        this.settled = true;
+        break;
+      }
+    }
+  }
+
+  draw() {
+    if (this.exploded || this.alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.translate(this.x, this.y);
+
+    let sx = 1, sy = 1;
+    if (this.trigger >= 0) {
+      const t = 1 - this.trigger / 0.12;
+      const p = Math.sin(this.wobble) * 0.15 * t;
+      sx = 1 + p; sy = 1 - p;
+    } else {
+      const p = Math.sin(this.wobble) * 0.03;
+      sx = 1 + p; sy = 1 - p;
+    }
+    ctx.scale(sx, sy);
+    ctx.rotate(this.rot);
+    drawPoop(ctx, this.r, this.trigger >= 0 ? (1 - this.trigger / 0.12) : 0);
+    ctx.restore();
+  }
+
+  hit(px, py) {
+    if (this.exploded || this.trigger >= 0) return false;
+    const dx = px - this.x;
+    const dy = py - this.y;
+    return dx * dx + dy * dy <= this.r * this.r * 1.6;
+  }
+
+  explode() {
+    if (this.exploded) return;
+    this.exploded = true;
+
+    combo++;
+    comboTimer = 0.6;
+    if (combo > maxCombo) maxCombo = combo;
+    const pts = 10 * combo;
+    score += pts;
+
+    floatTexts.push(new FloatText(this.x, this.y - this.r, '+' + pts, combo));
+
+    playPlop();
+
+    explosions.push(new Explosion(this.x, this.y));
+
+    const count = 14;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+      const sp = 120 + Math.random() * 220;
+      particles.push(new Particle(this.x, this.y, Math.cos(a) * sp, Math.sin(a) * sp, this.r * (0.2 + Math.random() * 0.3)));
+    }
+
+    shake = Math.min(shake + 2.5, 14);
+
+    for (let i = 0; i < poops.length; i++) {
+      const o = poops[i];
+      if (o === this || o.exploded || o.trigger >= 0) continue;
+      const dx = o.x - this.x;
+      const dy = o.y - this.y;
+      const reach = EXPLOSION_R + o.r;
+      if (dx * dx + dy * dy < reach * reach) {
+        o.trigger = 0.04 + Math.random() * 0.07;
+      }
+    }
+  }
+}
+
+class Explosion {
+  constructor(x, y) {
+    this.x = x; this.y = y;
+    this.r = 0;
+    this.maxR = EXPLOSION_R + Math.random() * 20;
+    this.life = 1;
+  }
+  update(dt) {
+    this.r += (this.maxR - this.r) * dt * 10;
+    this.life -= dt * 3.5;
+  }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.strokeStyle = '#b08d5e';
+    ctx.lineWidth = 4 * this.life;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = Math.max(0, this.life * 0.4);
+    ctx.fillStyle = '#7a5230';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+class Particle {
+  constructor(x, y, vx, vy, r) {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.r = r;
+    this.life = 1;
+    this.rot = Math.random() * Math.PI * 2;
+    this.rotSpeed = (Math.random() - 0.5) * 8;
+    const shades = ['#5c3d22', '#7a5230', '#8b6f47', '#6b4423'];
+    this.color = shades[Math.floor(Math.random() * shades.length)];
+  }
+  update(dt) {
+    this.vy += 400 * dt;
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.rot += this.rotSpeed * dt;
+    this.life -= dt * 1.8;
+    this.r *= (1 - dt * 0.5);
+  }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.r, this.r * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+class FloatText {
+  constructor(x, y, text, combo) {
+    this.x = x; this.y = y;
+    this.text = text;
+    this.combo = combo;
+    this.life = 1;
+    this.vy = -60;
+  }
+  update(dt) {
+    this.y += this.vy * dt;
+    this.vy += 30 * dt;
+    this.life -= dt * 1.2;
+  }
+  draw() {
+    if (this.life <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.life);
+    ctx.textAlign = 'center';
+    ctx.font = 'bold ' + (18 + Math.min(this.combo, 15)) + 'px -apple-system, sans-serif';
+    ctx.fillStyle = this.combo > 5 ? '#f85149' : '#b08d5e';
+    ctx.fillText(this.text, this.x, this.y);
+    ctx.restore();
+  }
+}
+
+// ===== Spawning =====
+function spawnPoop() {
+  const x = 40 + Math.random() * (W - 80);
+  poops.push(new Poop(x, -40));
+}
+
+// ===== Input =====
+function handleInput(clientX, clientY) {
+  if (gameState !== 'playing') return;
+  initAudio();
+  for (let i = poops.length - 1; i >= 0; i--) {
+    if (poops[i].hit(clientX, clientY)) {
+      poops[i].explode();
+      return;
+    }
+  }
+}
+
+canvas.addEventListener('mousedown', (e) => handleInput(e.clientX, e.clientY));
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  for (const t of e.changedTouches) handleInput(t.clientX, t.clientY);
+}, { passive: false });
+
+// ===== Game Flow =====
+function startGame() {
+  poops = []; explosions = []; particles = []; floatTexts = [];
+  score = 0; timeLeft = GAME_TIME; combo = 0; maxCombo = 0;
+  comboTimer = 0; spawnTimer = 0; elapsedTime = 0; shake = 0;
+  gameState = 'playing';
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('gameover-screen').classList.add('hidden');
+  document.getElementById('hud').classList.remove('hidden');
+  initAudio();
+}
+
+function endGame() {
+  gameState = 'gameover';
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('combo-display').style.opacity = '0';
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('best-chain').textContent = maxCombo;
+  document.getElementById('gameover-screen').classList.remove('hidden');
+}
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('restart-btn').addEventListener('click', startGame);
+
+// ===== Update =====
+function update(dt) {
+  // Stars twinkle
+  for (const s of stars) s.p += dt * 2;
+
+  if (gameState !== 'playing') return;
+
+  elapsedTime += dt;
+  timeLeft = Math.max(0, GAME_TIME - elapsedTime);
+  if (timeLeft <= 0) { endGame(); return; }
+
+  const spawnRate = SPAWN_BASE - Math.min(elapsedTime / GAME_TIME, 1) * 0.25;
+  spawnTimer += dt;
+  while (spawnTimer >= spawnRate) {
+    spawnTimer -= spawnRate;
+    spawnPoop();
+  }
+
+  for (let i = 0; i < poops.length; i++) poops[i].update(dt);
+  for (let i = 0; i < explosions.length; i++) explosions[i].update(dt);
+  for (let i = 0; i < particles.length; i++) particles[i].update(dt);
+  for (let i = 0; i < floatTexts.length; i++) floatTexts[i].update(dt);
+
+  if (comboTimer > 0) {
+    comboTimer -= dt;
+    if (comboTimer <= 0) combo = 0;
+  }
+
+  poops = poops.filter(p => !p.exploded && p.alpha > 0.01);
+  explosions = explosions.filter(e => e.life > 0);
+  particles = particles.filter(p => p.life > 0 && p.r > 0.5);
+  floatTexts = floatTexts.filter(f => f.life > 0);
+
+  shake *= Math.pow(0.001, dt);
+
+  // Update HUD
+  document.getElementById('score').textContent = score;
+  const timerEl = document.getElementById('timer');
+  timerEl.textContent = Math.ceil(timeLeft);
+  timerEl.className = 'hud-value timer' + (timeLeft <= 5 ? ' danger' : '');
+
+  const cd = document.getElementById('combo-display');
+  if (combo >= 3) {
+    cd.textContent = 'CHAIN x' + combo;
+    cd.style.opacity = Math.min(1, combo / 5);
+  } else {
+    cd.style.opacity = '0';
+  }
+}
+
+// ===== Render =====
+function render() {
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, W, H);
+
+  const grad = ctx.createRadialGradient(W / 2, H * 0.3, 0, W / 2, H * 0.3, W);
+  grad.addColorStop(0, 'rgba(139, 111, 71, 0.06)');
+  grad.addColorStop(1, 'rgba(13, 17, 23, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  for (const s of stars) {
+    const tw = 0.3 + Math.abs(Math.sin(s.p)) * 0.7;
+    ctx.globalAlpha = tw * 0.5;
+    ctx.fillStyle = '#8b949e';
+    ctx.beginPath();
+    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.save();
+  if (shake > 0.1) {
+    ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+  }
+
+  for (const p of particles) p.draw();
+  for (const p of poops) p.draw();
+  for (const e of explosions) e.draw();
+  for (const f of floatTexts) f.draw();
+
+  ctx.restore();
+}
+
+// ===== Loop =====
+let lastTime = performance.now();
+function loop(time) {
+  const dt = Math.min((time - lastTime) / 1000, 0.05);
+  lastTime = time;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
