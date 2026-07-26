@@ -245,14 +245,6 @@ function drawPoopImage(ctx, img, r, squish) {
     ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
     ctx.restore();
   }
-
-  ctx.strokeStyle = squish > 0.01
-    ? 'rgba(248,81,73,' + squish + ')'
-    : 'rgba(0,0,0,0.35)';
-  ctx.lineWidth = squish > 0.01 ? 4 : 2.5;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.stroke();
 }
 
 // ===== State =====
