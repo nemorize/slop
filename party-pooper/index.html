@@ -314,9 +314,7 @@ class Poop {
     }
 
     if (this.settled) {
-      this.settleTime += dt;
       this.wobble += dt * 1.5;
-      if (this.settleTime > 8) this.alpha = Math.max(0, this.alpha - dt * 0.4);
       return;
     }
 
@@ -329,27 +327,8 @@ class Poop {
     if (this.x < this.r) { this.x = this.r; this.vx = Math.abs(this.vx) * 0.4; }
     if (this.x > W - this.r) { this.x = W - this.r; this.vx = -Math.abs(this.vx) * 0.4; }
 
-    if (this.y > H - this.r - 30) {
-      this.y = H - this.r - 30;
-      this.vy = 0; this.vx = 0;
-      this.settled = true;
-    }
-
-    for (let i = 0; i < poops.length; i++) {
-      const o = poops[i];
-      if (o === this || !o.settled || o.exploded) continue;
-      const dx = this.x - o.x;
-      const dy = this.y - o.y;
-      const d2 = dx * dx + dy * dy;
-      const minD = this.r + o.r;
-      if (d2 < minD * minD) {
-        const d = Math.sqrt(d2) || 0.01;
-        this.x = o.x + (dx / d) * minD;
-        this.y = o.y + (dy / d) * minD;
-        this.vy = 0; this.vx = 0;
-        this.settled = true;
-        break;
-      }
+    if (this.y > H + this.r + 20) {
+      this.exploded = true;
     }
   }
 
